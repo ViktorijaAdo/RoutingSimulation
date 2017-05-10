@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using QuickGraph;
+using System.Diagnostics;
 
 namespace NetworkRoutingSimulator
 {
@@ -22,6 +24,12 @@ namespace NetworkRoutingSimulator
     {
         public MainWindow()
         {
+            var viewModel = new MainWindowViewModel();
+            this.DataContext = viewModel;
+
+            Trace.WriteLine(viewModel.RoutingGraph.EdgeCount);
+            Trace.WriteLine(viewModel.RoutingGraph.VertexCount);
+
             InitializeComponent();
         }
     }

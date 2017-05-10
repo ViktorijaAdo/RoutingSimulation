@@ -4,9 +4,57 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NetworkRoutingSimulator"
+        xmlns:graphsharp="clr-namespace:GraphSharp.Controls;assembly=GraphSharp.Controls"
         mc:Ignorable="d"
+        x:Name="root"
         Title="MainWindow" Height="350" Width="525">
+
     <Grid>
-        
+        <Grid.Resources>
+            <DataTemplate x:Key="routerTemplate" DataType="{x:Type local:RouterVertex}">
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBox Text="{Binding Path=RouterName}" />
+                </StackPanel>
+            </DataTemplate>
+
+
+            <Style TargetType="{x:Type graphsharp:VertexControl}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type graphsharp:VertexControl}">
+                            <Border BorderBrush="White" 
+                        Background="Black"
+            BorderThickness="2"
+            CornerRadius="10,10,10,10"
+            Padding="{TemplateBinding Padding}">
+                                <ContentPresenter Content="{TemplateBinding Vertex}" 
+                            ContentTemplate="{StaticResource routerTemplate}"/>
+
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="2" Color="LightGray" 
+                            Opacity="0.3" Direction="315"/>
+                                </Border.Effect>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="{x:Type graphsharp:EdgeControl}">
+                <Style.Resources>
+                    <ToolTip x:Key="ToolTipContent">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" Text="Edge.ID"/>
+                            <TextBlock Text="{Binding ID}"/>
+                        </StackPanel>
+                    </ToolTip>
+                </Style.Resources>
+                <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
+            </Style>
+
+        </Grid.Resources>
+        <StackPanel>
+            <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA" HighlightAlgorithmType="Simple"/>
+        </StackPanel>
     </Grid>
 </Window>
