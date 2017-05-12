@@ -13,12 +13,29 @@
         <Grid.Resources>
             <DataTemplate x:Key="routerTemplate" DataType="{x:Type local:RouterVertex}">
                 <StackPanel Orientation="Horizontal" Margin="5">
-                    <TextBox Text="{Binding Path=RouterName}" />
+                    <TextBlock Text="{Binding Path=RouterName}" Foreground="White"/>
                 </StackPanel>
             </DataTemplate>
 
 
             <Style TargetType="{x:Type graphsharp:VertexControl}">
+                <Style.Resources>
+                    <ToolTip x:Key="ToolTipContent">
+                        <ItemsControl ItemsSource="{Binding RoutingTable}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="{Binding Rows.Count}" Columns="{Binding Columns.Count}"></UniformGrid>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"></TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ToolTip>
+                </Style.Resources>
+                <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type graphsharp:VertexControl}">
@@ -44,17 +61,17 @@
                 <Style.Resources>
                     <ToolTip x:Key="ToolTipContent">
                         <StackPanel>
-                            <TextBlock FontWeight="Bold" Text="Edge.ID"/>
-                            <TextBlock Text="{Binding ID}"/>
+                            <UniformGrid ></UniformGrid>
                         </StackPanel>
                     </ToolTip>
                 </Style.Resources>
                 <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
             </Style>
-
+            
         </Grid.Resources>
         <StackPanel>
-            <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA" HighlightAlgorithmType="Simple"/>
+            <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA"/>
+            <!-- HighlightAlgorithmType="Simple"-->
         </StackPanel>
     </Grid>
 </Window>
