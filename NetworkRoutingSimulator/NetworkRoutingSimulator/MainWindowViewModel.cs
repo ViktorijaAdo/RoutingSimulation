@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace NetworkRoutingSimulator
 {
@@ -15,6 +16,7 @@ namespace NetworkRoutingSimulator
             _createConnectionCommand = new RelayCommand(OnCreateConnection, CanCreateConnection);
             _createPacketCommand = new RelayCommand(OnCreatePacket, CanCreatePacket);
             _doRoutingStepCommand = new RelayCommand(OnRoutingStep);
+            _vertices = null;
             CreateRoutingGraph();
         }
 
@@ -28,6 +30,7 @@ namespace NetworkRoutingSimulator
         private RelayCommand _createPacketCommand;
         private RelayCommand _doRoutingStepCommand;
         private RoutingGraph _routingGraph;
+        private ObservableCollection<RouterVertex> _vertices;
 
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
@@ -80,6 +83,15 @@ namespace NetworkRoutingSimulator
             get { return _routingGraph; }
         }
 
+        public ObservableCollection<RouterVertex> Vertices
+            {
+            get {
+                if (_vertices == null)
+                    return _vertices = new ObservableCollection<RouterVertex>(RoutingGraph.Vertices);
+                return _vertices;
+                }
+            }
+
         public RouterVertex NewPacketSource
             {
             get
@@ -114,8 +126,10 @@ namespace NetworkRoutingSimulator
 
         private void OnCreateRouterCommand()
             {
-            RoutingGraph.AddVertex(new RouterVertex(_newRouterName));
-            PropertyChanged(this, new PropertyChangedEventArgs("RoutingGraph.Vertices"));
+            var router = new RouterVertex(_newRouterName);
+            RoutingGraph.AddVertex(router);
+            if (_vertices != null)
+                _vertices.Add(router);
             }
 
         private bool CanCreateConnection()
@@ -142,6 +156,9 @@ namespace NetworkRoutingSimulator
 
         private void OnRoutingStep()
             {
+            foreach (var router in RoutingGraph.Vertices)
+                router.CheckForDisconectedRouters();
+
             foreach(var router in RoutingGraph.Vertices)
                 router.SendRoutingTableUpdate();
 
@@ -150,6 +167,9 @@ namespace NetworkRoutingSimulator
 
             foreach(var router in RoutingGraph.Vertices)
                 router.SendPackets();
+
+            foreach (var Router in RoutingGraph.Vertices)
+                Router.UpdatePackets();
             }
 
         private void CreateRoutingGraph()

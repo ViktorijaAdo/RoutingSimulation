@@ -5,12 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NetworkRoutingSimulator"
         xmlns:graphsharp="clr-namespace:GraphSharp.Controls;assembly=GraphSharp.Controls"
+        xmlns:zoom="clr-namespace:WPFExtensions.Controls;assembly=WPFExtensions"
         mc:Ignorable="d"
         x:Name="root"
-        SizeToContent="WidthAndHeight"
         Title="MainWindow" Height="350" Width="525">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
         <Grid.Resources>
             <Style x:Name="comboBoxTemplate" TargetType="{x:Type ComboBox}">
                 <Setter Property="ItemTemplate">
@@ -85,12 +90,12 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type graphsharp:VertexControl}">
                             <ContentControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                            <Border BorderBrush="White" Background="Black" BorderThickness="2" CornerRadius="10,10,10,10" Padding="{TemplateBinding Padding}">
-                                <ContentPresenter Content="{TemplateBinding Vertex}"  ContentTemplate="{StaticResource routerTemplate}" Height="Auto" Width="Auto"/>
-                                <Border.Effect>
-                                    <DropShadowEffect BlurRadius="2" Color="LightGray"  Opacity="0.3" Direction="315"/>
-                                </Border.Effect>
-                            </Border>
+                                <Border BorderBrush="White" Background="Black" BorderThickness="2" CornerRadius="10,10,10,10" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter Content="{TemplateBinding Vertex}"  ContentTemplate="{StaticResource routerTemplate}" Height="Auto" Width="Auto"/>
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="2" Color="LightGray"  Opacity="0.3" Direction="315"/>
+                                    </Border.Effect>
+                                </Border>
                             </ContentControl>
                         </ControlTemplate>
                     </Setter.Value>
@@ -107,10 +112,9 @@
                 </Style.Resources>
                 <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
             </Style>
-            
+
         </Grid.Resources>
-        <StackPanel>
-            <Grid>
+        <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -129,8 +133,8 @@
                     <Label >
                         <TextBlock Text="Select Routers:"/>
                     </Label>
-                    <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionSource}" />
-                    <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionTarget}" />
+                    <ComboBox ItemsSource="{Binding Vertices}" SelectedItem="{Binding NewConnectionSource}" />
+                    <ComboBox ItemsSource="{Binding Vertices}" SelectedItem="{Binding NewConnectionTarget}" />
                     <Button Command="{Binding CreateConnectionCommand}" >
                         <TextBlock Text="Add Connection"/>
                     </Button>
@@ -149,10 +153,11 @@
                     </Button>
                 </StackPanel>
             </Grid>
-            <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA" />
-            <Button Command="{Binding DoRoutingStepCommand}">
+            <zoom:ZoomControl Grid.Row="1" HorizontalAlignment="Stretch" Width="Auto" Height="Auto">
+                <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA" />
+            </zoom:ZoomControl>
+            <Button Command="{Binding DoRoutingStepCommand}" Grid.Row="2">
                 <TextBlock Text="NextStep"/>
             </Button>
-        </StackPanel>
     </Grid>
 </Window>

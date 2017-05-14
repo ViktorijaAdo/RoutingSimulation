@@ -28,6 +28,8 @@ namespace NetworkRoutingSimulator
 
         private ObservableCollection<RoutingInfo> _routingTable;
 
+        private List<NetworkPacket> _NewPackages;
+
         private ObservableCollection<NetworkPacket> _containingPackages;
 
         private RelayCommand _deleteRouterCommand;
@@ -36,7 +38,8 @@ namespace NetworkRoutingSimulator
         {
             RouterName = routerName;
             _containingPackages = new ObservableCollection<NetworkPacket>();
-            _routingTable = new ObservableCollection<RoutingInfo>();
+            _NewPackages = new List<NetworkPacket>();
+            _routingTable = new ObservableCollection<RoutingInfo>() { new RoutingInfo() { DestinationName = RouterName, NextRouter = null, HopsNumber = 0} };
             _neighboards = new ObservableCollection<RouterVertex>();
             _neighborUpdates = new Dictionary<RouterVertex, List<RoutingInfo>>();
             _disaperedNeighbors = new Dictionary<RouterVertex, int>();
@@ -69,6 +72,11 @@ namespace NetworkRoutingSimulator
             info.HopsNumber = 1;
             }
 
+        public void SendPackage(NetworkPacket packet)
+            {
+            _NewPackages.Add(packet);
+            }
+
         public void SendRoutingTableUpdate()
             {
             foreach(var neighbor in Neighboars)
@@ -81,13 +89,17 @@ namespace NetworkRoutingSimulator
             {
             foreach (var neighbor in Neighboars)
                 {
-                var update = _neighborUpdates[neighbor];
-                if (update == null)
+                if(!_neighborUpdates.ContainsKey(neighbor))
                     {
-                    _disaperedNeighbors[neighbor]++;
+                    if (_disaperedNeighbors.ContainsKey(neighbor))
+                        _disaperedNeighbors[neighbor]++;
+                    else
+                        _disaperedNeighbors.Add(neighbor, 1);
+
                     continue;
                     }
 
+                var update = _neighborUpdates[neighbor];
                 if (_disaperedNeighbors.ContainsKey(neighbor))
                     _disaperedNeighbors.Remove(neighbor);
 
@@ -113,11 +125,14 @@ namespace NetworkRoutingSimulator
             var sentPackets = new List<NetworkPacket>();
             foreach (var packet in ContainingPackages)
                 {
+                if (packet.DestinationRouterName == this.RouterName)
+                    sentPackets.Add(packet);
+
                 String nextRouter = RoutingTable.Where(x => x.DestinationName == packet.DestinationRouterName).Select(x => x.NextRouter).SingleOrDefault();
                 if(nextRouter != null)
                     {
                     var neighbor = Neighboars.Where(x => x.RouterName == nextRouter).SingleOrDefault();
-                    neighbor.ContainingPackages.Add(packet);
+                    neighbor.SendPackage(packet);
                     sentPackets.Add(packet);
                     }
                 }
@@ -126,7 +141,34 @@ namespace NetworkRoutingSimulator
                 this.ContainingPackages.Remove(packet);
             }
 
+        internal void CheckForDisconectedRouters()
+            {
+            foreach (var missingNeighbor in _disaperedNeighbors.Keys)
+                {
+                if (_disaperedNeighbors[missingNeighbor] == 6)
+                    {
+                    _neighboards.Remove(missingNeighbor);
+                    var nonValidEntries = _routingTable.Where(x => x.DestinationName == missingNeighbor.RouterName || x.NextRouter == missingNeighbor.RouterName);
+                    foreach(var entry in nonValidEntries)
+                        {
+                        _routingTable.Remove(entry);
+                        foreach (var neighbor in _neighboards)
+                            {
+                            }
+                        }
+                    }
+                }
+            }
 
+        public void UpdatePackets()
+            {
+            foreach(var packet in _NewPackages)
+                {
+                ContainingPackages.Add(packet);
+                }
+
+            _NewPackages = new List<NetworkPacket>();
+            }
 
         private void OnDelete()
             {
