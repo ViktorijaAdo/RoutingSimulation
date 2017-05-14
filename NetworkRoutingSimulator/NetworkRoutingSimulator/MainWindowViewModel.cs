@@ -13,6 +13,7 @@ namespace NetworkRoutingSimulator
         {
             _createRouterCommand = new RelayCommand(OnCreateRouterCommand, CanCreateRouter);
             _createConnectionCommand = new RelayCommand(OnCreateConnection, CanCreateConnection);
+            _createPacketCommand = new RelayCommand(OnCreatePacket, CanCreatePacket);
             CreateRoutingGraph();
         }
 
@@ -21,6 +22,9 @@ namespace NetworkRoutingSimulator
         private RouterVertex _newConnectionTarget;
         private RouterVertex _newConnextionSource;
         private RelayCommand _createConnectionCommand;
+        private RouterVertex _newPacketSource;
+        private RouterVertex _newPacketDestination;
+        private RelayCommand _createPacketCommand;
         private RoutingGraph _routingGraph;
 
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
@@ -72,6 +76,32 @@ namespace NetworkRoutingSimulator
             get { return _routingGraph; }
         }
 
+        public RouterVertex NewPacketSource
+            {
+            get
+                {
+                return _newPacketSource;
+                }
+            set
+                {
+                _newPacketSource = value;
+                CreatePacketCommand.RaiseCanExecuteChanged();
+                }
+            }
+        public RouterVertex NewPacketDestination
+            {
+            get
+                {
+                return _newPacketDestination;
+                }
+            set
+                {
+                _newPacketDestination = value;
+                CreatePacketCommand.RaiseCanExecuteChanged();
+                }
+            }
+
+        public RelayCommand CreatePacketCommand { get { return _createPacketCommand; } }
         private bool CanCreateRouter()
             {
             return NewRouterName != null && RoutingGraph.Vertices.Where(x => x.RouterName == NewRouterName).Count() == 0;
@@ -94,6 +124,17 @@ namespace NetworkRoutingSimulator
             RoutingGraph.AddEdge(new ConnectionEdge(NewConnectionTarget, NewConnectionSource));
             }
 
+
+        private bool CanCreatePacket()
+            {
+            return NewPacketDestination != null && NewPacketSource != null;
+            }
+
+        private void OnCreatePacket()
+            {
+            NewPacketSource.ContainingPackages.Add(new NetworkPacket(NewPacketDestination.RouterName));
+            }
+
         private void CreateRoutingGraph()
         {
             var g = new RoutingGraph();
@@ -104,6 +145,8 @@ namespace NetworkRoutingSimulator
                 vertexes[i] = new RouterVertex(i.ToString());
                 g.AddVertex(vertexes[i]);
             }
+            vertexes[3].ContainingPackages.Add(new NetworkPacket("5"));
+            vertexes[3].ContainingPackages.Add(new NetworkPacket("5"));
 
             g.AddEdge(new ConnectionEdge(vertexes[0], vertexes[1]));
             g.AddEdge(new ConnectionEdge(vertexes[1], vertexes[2]));

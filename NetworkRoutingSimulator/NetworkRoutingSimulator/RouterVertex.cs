@@ -10,18 +10,22 @@ namespace NetworkRoutingSimulator
 {
     class RouterVertex
     {
+        private ObservableCollection<NetworkPacket> _containingPackages;
+
         public RouterVertex(String routerName)
         {
             RouterName = routerName;
-            RoutingTable = new DataTable();
-            RoutingTable.NewRow();
+            _containingPackages = new ObservableCollection<NetworkPacket>();
         }
 
-        public DataTable RoutingTable { get; set; }
+        public String RouterName { get; set; }
 
-        public String RouterName
-        {
-            get; set;
-        }
+        public ObservableCollection<NetworkPacket> ContainingPackages
+            {
+            get
+                {
+                return _containingPackages;
+                }
+            }
     }
 }

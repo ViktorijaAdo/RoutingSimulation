@@ -22,8 +22,24 @@
             </Style>
 
             <DataTemplate x:Key="routerTemplate" DataType="{x:Type local:RouterVertex}">
-                <StackPanel Orientation="Horizontal" Margin="5">
+                <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Stretch">
                     <TextBlock Text="{Binding Path=RouterName}" Foreground="White"/>
+                    
+                    <ListBox ItemsSource="{Binding ContainingPackages}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel IsItemsHost="False" Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0">
+                                    <Rectangle Fill="Red" Width="10" Height="15"/>
+                                    <TextBlock Text="{Binding DestinationRouterName}" Foreground="White"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </StackPanel>
             </DataTemplate>
 
@@ -31,37 +47,21 @@
             <Style TargetType="{x:Type graphsharp:VertexControl}">
                 <Style.Resources>
                     <ToolTip x:Key="ToolTipContent">
-                        <ItemsControl ItemsSource="{Binding RoutingTable}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Rows="{Binding Rows.Count}" Columns="{Binding Columns.Count}"></UniformGrid>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}"></TextBlock>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <ListView ItemsSource="{Binding ContainingPackages, Mode=OneWay}"></ListView>
                     </ToolTip>
                 </Style.Resources>
                 <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type graphsharp:VertexControl}">
-                            <Border BorderBrush="White" 
-                        Background="Black"
-            BorderThickness="2"
-            CornerRadius="10,10,10,10"
-            Padding="{TemplateBinding Padding}">
-                                <ContentPresenter Content="{TemplateBinding Vertex}" 
-                            ContentTemplate="{StaticResource routerTemplate}"/>
-
+                            <ContentControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Border BorderBrush="White" Background="Black" BorderThickness="2" CornerRadius="10,10,10,10" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter Content="{TemplateBinding Vertex}"  ContentTemplate="{StaticResource routerTemplate}" Height="Auto" Width="Auto"/>
                                 <Border.Effect>
-                                    <DropShadowEffect BlurRadius="2" Color="LightGray" 
-                            Opacity="0.3" Direction="315"/>
+                                    <DropShadowEffect BlurRadius="2" Color="LightGray"  Opacity="0.3" Direction="315"/>
                                 </Border.Effect>
                             </Border>
+                            </ContentControl>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -80,24 +80,46 @@
             
         </Grid.Resources>
         <StackPanel>
-            <Label >
-                <TextBlock Text="RouterName:" />
-            </Label>
-            <TextBox Text="{Binding NewRouterName, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Command="{Binding CreateRouterCommand}">
-                <TextBlock Text="Add router"/>
-            </Button>
-            <Label>
-                <TextBlock Text="Select Routers:"/>
-            </Label>
-            <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionSource}">
-            </ComboBox>
-            <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionTarget}">
-            </ComboBox>
-            <Button Command="{Binding CreateConnectionCommand}" >
-                <TextBlock Text="Add Connection"/>
-            </Button>
-            <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="2">
+                    <Label >
+                        <TextBlock Text="RouterName:" />
+                    </Label>
+                    <TextBox Text="{Binding NewRouterName, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Command="{Binding CreateRouterCommand}">
+                        <TextBlock Text="Add router"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <Label >
+                        <TextBlock Text="Select Routers:"/>
+                    </Label>
+                    <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionSource}" />
+                    <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionTarget}" />
+                    <Button Command="{Binding CreateConnectionCommand}" >
+                        <TextBlock Text="Add Connection"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="0">
+                    <Label >
+                        <TextBlock Text="Select sender router:"/>
+                    </Label>
+                    <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewPacketSource}" />
+                    <Label >
+                        <TextBlock Text="Select destination router:"/>
+                    </Label>
+                    <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewPacketDestination}" />
+                    <Button Command="{Binding CreatePacketCommand}" >
+                        <TextBlock Text="Send Packet"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+            <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA" />
             <!-- HighlightAlgorithmType="Simple"-->
         </StackPanel>
     </Grid>

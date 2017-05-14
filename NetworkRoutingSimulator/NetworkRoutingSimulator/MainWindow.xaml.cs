@@ -21,9 +21,9 @@ namespace NetworkRoutingSimulator
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
-    {
-        public MainWindow()
         {
+        public MainWindow()
+            {
             var viewModel = new MainWindowViewModel();
             this.DataContext = viewModel;
 
@@ -31,6 +31,6 @@ namespace NetworkRoutingSimulator
             Trace.WriteLine(viewModel.RoutingGraph.VertexCount);
 
             InitializeComponent();
+            }
         }
-    }
 }
