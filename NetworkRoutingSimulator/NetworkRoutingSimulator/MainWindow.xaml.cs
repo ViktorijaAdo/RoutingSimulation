@@ -27,9 +27,6 @@ namespace NetworkRoutingSimulator
             var viewModel = new MainWindowViewModel();
             this.DataContext = viewModel;
 
-            Trace.WriteLine(viewModel.RoutingGraph.EdgeCount);
-            Trace.WriteLine(viewModel.RoutingGraph.VertexCount);
-
             InitializeComponent();
             }
         }

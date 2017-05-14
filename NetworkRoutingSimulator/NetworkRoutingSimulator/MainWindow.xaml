@@ -7,6 +7,7 @@
         xmlns:graphsharp="clr-namespace:GraphSharp.Controls;assembly=GraphSharp.Controls"
         mc:Ignorable="d"
         x:Name="root"
+        SizeToContent="WidthAndHeight"
         Title="MainWindow" Height="350" Width="525">
 
     <Grid>
@@ -47,7 +48,24 @@
             <Style TargetType="{x:Type graphsharp:VertexControl}">
                 <Style.Resources>
                     <ToolTip x:Key="ToolTipContent">
-                        <ListView ItemsSource="{Binding ContainingPackages, Mode=OneWay}"></ListView>
+                        <StackPanel>
+                            <UniformGrid x:Uid="anotation" Rows="1" Columns="3" Width="300">
+                                <TextBlock Text="Destination Name " Grid.Column="0"/>
+                                <TextBlock Text="Next Router " Grid.Column="1"/>
+                                <TextBlock Text="Hops Number " Grid.Column="2"/>
+                            </UniformGrid>
+                            <ListBox ItemsSource="{Binding RoutingTable}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <UniformGrid Rows="1" Columns="3" Width="300">
+                                            <TextBlock Text="{Binding DestinationName}" Grid.Column="0"/>
+                                            <TextBlock Text="{Binding NextRouter}" Grid.Column="1"/>
+                                            <TextBlock Text="{Binding HopsNumber}" Grid.Column="2"/>
+                                        </UniformGrid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
                     </ToolTip>
                 </Style.Resources>
                 <Setter Property="ToolTip" Value="{StaticResource ToolTipContent}"/>
@@ -120,7 +138,9 @@
                 </StackPanel>
             </Grid>
             <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA" />
-            <!-- HighlightAlgorithmType="Simple"-->
+            <Button Command="{Binding DoRoutingStepCommand}">
+                <TextBlock Text="NextStep"/>
+            </Button>
         </StackPanel>
     </Grid>
 </Window>

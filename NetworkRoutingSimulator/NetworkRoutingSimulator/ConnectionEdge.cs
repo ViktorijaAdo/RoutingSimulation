@@ -12,8 +12,6 @@ namespace NetworkRoutingSimulator
         private RouterVertex _source;
         private RouterVertex _target;
 
-        //public long EdgeWeight { get; set; }
-
         public RouterVertex Source { get {return _source; } }
 
         public RouterVertex Target { get { return _target; } }
@@ -22,6 +20,8 @@ namespace NetworkRoutingSimulator
         {
             _source = source;
             _target = target;
+            Source.AddNeighboard(Target);
+            Target.AddNeighboard(Source);
         }
     }
 }

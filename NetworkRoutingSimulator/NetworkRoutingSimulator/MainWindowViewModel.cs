@@ -14,6 +14,7 @@ namespace NetworkRoutingSimulator
             _createRouterCommand = new RelayCommand(OnCreateRouterCommand, CanCreateRouter);
             _createConnectionCommand = new RelayCommand(OnCreateConnection, CanCreateConnection);
             _createPacketCommand = new RelayCommand(OnCreatePacket, CanCreatePacket);
+            _doRoutingStepCommand = new RelayCommand(OnRoutingStep);
             CreateRoutingGraph();
         }
 
@@ -25,6 +26,7 @@ namespace NetworkRoutingSimulator
         private RouterVertex _newPacketSource;
         private RouterVertex _newPacketDestination;
         private RelayCommand _createPacketCommand;
+        private RelayCommand _doRoutingStepCommand;
         private RoutingGraph _routingGraph;
 
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
@@ -70,6 +72,8 @@ namespace NetworkRoutingSimulator
             }
 
         public RelayCommand CreateConnectionCommand { get { return _createConnectionCommand; } }
+
+        public RelayCommand DoRoutingStepCommand { get { return _doRoutingStepCommand; } }
 
         public RoutingGraph RoutingGraph
         {
@@ -135,6 +139,18 @@ namespace NetworkRoutingSimulator
             NewPacketSource.ContainingPackages.Add(new NetworkPacket(NewPacketDestination.RouterName));
             }
 
+        private void OnRoutingStep()
+            {
+            foreach(var router in RoutingGraph.Vertices)
+                router.SendRoutingTableUpdate();
+
+            foreach (var router in RoutingGraph.Vertices)
+                router.UpdateRoutingTable();
+
+            foreach(var router in RoutingGraph.Vertices)
+                router.SendPackets();
+            }
+
         private void CreateRoutingGraph()
         {
             var g = new RoutingGraph();
@@ -145,8 +161,8 @@ namespace NetworkRoutingSimulator
                 vertexes[i] = new RouterVertex(i.ToString());
                 g.AddVertex(vertexes[i]);
             }
-            vertexes[3].ContainingPackages.Add(new NetworkPacket("5"));
-            vertexes[3].ContainingPackages.Add(new NetworkPacket("5"));
+            vertexes[3].ContainingPackages.Add(new NetworkPacket("4"));
+            vertexes[3].ContainingPackages.Add(new NetworkPacket("4"));
 
             g.AddEdge(new ConnectionEdge(vertexes[0], vertexes[1]));
             g.AddEdge(new ConnectionEdge(vertexes[1], vertexes[2]));
