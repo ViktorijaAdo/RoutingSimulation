@@ -3,50 +3,96 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using QuickGraph;
+using System.ComponentModel;
 
 namespace NetworkRoutingSimulator
 {
-    class MainWindowViewModel
+    class MainWindowViewModel : INotifyPropertyChanged
     {
         public MainWindowViewModel()
         {
-            CreateGraphToVisualize();
+            _createRouterCommand = new RelayCommand(OnCreateRouterCommand, CanCreateRouter);
+            _createConnectionCommand = new RelayCommand(OnCreateConnection, CanCreateConnection);
             CreateRoutingGraph();
         }
 
-        private IBidirectionalGraph<object, IEdge<object>> _graphToVisualize;
+        private String _newRouterName;
+        private RelayCommand _createRouterCommand;
+        private RouterVertex _newConnectionTarget;
+        private RouterVertex _newConnextionSource;
+        private RelayCommand _createConnectionCommand;
         private RoutingGraph _routingGraph;
 
-        public IBidirectionalGraph<object, IEdge<object>> GraphToVisualize
-        {
-            get { return _graphToVisualize; }
-        }
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+
+        public String NewRouterName
+            {
+            get
+                {
+                return _newRouterName;
+                }
+            set
+                {
+                _newRouterName = value;
+                CreateRouterCommand.RaiseCanExecuteChanged();
+                }
+            }
+        public RelayCommand CreateRouterCommand { get { return _createRouterCommand; } }
+
+        public RouterVertex NewConnectionTarget
+            {
+            get
+                {
+                return _newConnectionTarget;
+                }
+            set
+                {
+                _newConnectionTarget = value;
+                CreateConnectionCommand.RaiseCanExecuteChanged();
+                }
+            }
+
+        public RouterVertex NewConnectionSource
+            {
+            get
+                {
+                return _newConnextionSource;
+                }
+            set
+                {
+                _newConnextionSource = value;
+                CreateConnectionCommand.RaiseCanExecuteChanged();
+                }
+            }
+
+        public RelayCommand CreateConnectionCommand { get { return _createConnectionCommand; } }
 
         public RoutingGraph RoutingGraph
         {
             get { return _routingGraph; }
         }
 
-        private void CreateGraphToVisualize()
-        {
-            var g = new BidirectionalGraph<object, IEdge<object>>();
-
-            string[] vertices = new string[5];
-            for (int i = 0; i < 5; i++)
+        private bool CanCreateRouter()
             {
-                vertices[i] = i.ToString();
-                g.AddVertex(vertices[i]);
+            return NewRouterName != null && RoutingGraph.Vertices.Where(x => x.RouterName == NewRouterName).Count() == 0;
             }
 
-            g.AddEdge(new Edge<object>(vertices[0], vertices[1]));
-            g.AddEdge(new Edge<object>(vertices[1], vertices[2]));
-            g.AddEdge(new Edge<object>(vertices[2], vertices[3]));
-            g.AddEdge(new Edge<object>(vertices[3], vertices[1]));
-            g.AddEdge(new Edge<object>(vertices[4], vertices[0]));
+        private void OnCreateRouterCommand()
+            {
+            RoutingGraph.AddVertex(new RouterVertex(_newRouterName));
+            PropertyChanged(this, new PropertyChangedEventArgs("RoutingGraph.Vertices"));
+            }
 
-            _graphToVisualize = g;
-        }
+        private bool CanCreateConnection()
+            {
+            return NewConnectionSource != null && NewConnectionTarget != null && NewConnectionSource != NewConnectionTarget;
+            }
+
+        private void OnCreateConnection()
+            {
+            RoutingGraph.AddEdge(new ConnectionEdge(NewConnectionSource, NewConnectionTarget));
+            RoutingGraph.AddEdge(new ConnectionEdge(NewConnectionTarget, NewConnectionSource));
+            }
 
         private void CreateRoutingGraph()
         {

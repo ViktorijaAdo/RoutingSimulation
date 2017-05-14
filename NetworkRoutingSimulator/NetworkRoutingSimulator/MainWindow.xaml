@@ -11,6 +11,16 @@
 
     <Grid>
         <Grid.Resources>
+            <Style x:Name="comboBoxTemplate" TargetType="{x:Type ComboBox}">
+                <Setter Property="ItemTemplate">
+                    <Setter.Value>
+                        <DataTemplate DataType="{x:Type local:RouterVertex}">
+                            <TextBlock Text="{Binding RouterName}"/>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <DataTemplate x:Key="routerTemplate" DataType="{x:Type local:RouterVertex}">
                 <StackPanel Orientation="Horizontal" Margin="5">
                     <TextBlock Text="{Binding Path=RouterName}" Foreground="White"/>
@@ -70,6 +80,23 @@
             
         </Grid.Resources>
         <StackPanel>
+            <Label >
+                <TextBlock Text="RouterName:" />
+            </Label>
+            <TextBox Text="{Binding NewRouterName, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Command="{Binding CreateRouterCommand}">
+                <TextBlock Text="Add router"/>
+            </Button>
+            <Label>
+                <TextBlock Text="Select Routers:"/>
+            </Label>
+            <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionSource}">
+            </ComboBox>
+            <ComboBox ItemsSource="{Binding RoutingGraph.Vertices}" SelectedItem="{Binding NewConnectionTarget}">
+            </ComboBox>
+            <Button Command="{Binding CreateConnectionCommand}" >
+                <TextBlock Text="Add Connection"/>
+            </Button>
             <local:RoutingGraphLayout x:Name="mygrapLayout" Graph="{Binding RoutingGraph}" LayoutAlgorithmType="FR" OverlapRemovalAlgorithmType="FSA"/>
             <!-- HighlightAlgorithmType="Simple"-->
         </StackPanel>
