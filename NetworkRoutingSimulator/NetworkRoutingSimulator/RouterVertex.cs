@@ -9,13 +9,16 @@ using System.Threading.Tasks;
 namespace NetworkRoutingSimulator
 {
     class RouterVertex
-    {
+        {
         public class RoutingInfo
             {
             public String DestinationName { get; set; }
             public String NextRouter { get; set; }
             public long HopsNumber { get; set; }
             }
+
+        public delegate void DeletedEventHandler(object sender, EventArgs e);
+        public event DeletedEventHandler Deleted = delegate { }; 
 
         private Dictionary<RouterVertex, List<RoutingInfo>> _neighborUpdates;
 
@@ -27,6 +30,8 @@ namespace NetworkRoutingSimulator
 
         private ObservableCollection<NetworkPacket> _containingPackages;
 
+        private RelayCommand _deleteRouterCommand;
+
         public RouterVertex(String routerName)
         {
             RouterName = routerName;
@@ -35,10 +40,12 @@ namespace NetworkRoutingSimulator
             _neighboards = new ObservableCollection<RouterVertex>();
             _neighborUpdates = new Dictionary<RouterVertex, List<RoutingInfo>>();
             _disaperedNeighbors = new Dictionary<RouterVertex, int>();
-        }
+            _deleteRouterCommand = new RelayCommand(OnDelete);
+            }
 
         public String RouterName { get; set; }
 
+        public RelayCommand DeleteRouterCommand { get { return _deleteRouterCommand; } }
         public ObservableCollection<RouterVertex> Neighboars { get { return _neighboards; } }
 
         public ObservableCollection<RoutingInfo> RoutingTable { get { return _routingTable; } }
@@ -117,6 +124,13 @@ namespace NetworkRoutingSimulator
 
             foreach (var packet in sentPackets)
                 this.ContainingPackages.Remove(packet);
+            }
+
+
+
+        private void OnDelete()
+            {
+            Deleted(this, new EventArgs());
             }
 
         }

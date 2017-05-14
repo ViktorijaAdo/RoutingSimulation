@@ -106,6 +106,7 @@ namespace NetworkRoutingSimulator
             }
 
         public RelayCommand CreatePacketCommand { get { return _createPacketCommand; } }
+
         private bool CanCreateRouter()
             {
             return NewRouterName != null && RoutingGraph.Vertices.Where(x => x.RouterName == NewRouterName).Count() == 0;

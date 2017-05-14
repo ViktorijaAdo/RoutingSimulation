@@ -75,6 +75,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Booleaninverter.cs" />
     <Compile Include="ConnectionEdge.cs" />
     <Compile Include="NetworkPacket.cs" />
     <Compile Include="RelayCommand.cs" />

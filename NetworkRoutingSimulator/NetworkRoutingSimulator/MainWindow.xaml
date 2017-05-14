@@ -24,23 +24,35 @@
 
             <DataTemplate x:Key="routerTemplate" DataType="{x:Type local:RouterVertex}">
                 <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Stretch">
-                    <TextBlock Text="{Binding Path=RouterName}" Foreground="White"/>
-                    
-                    <ListBox ItemsSource="{Binding ContainingPackages}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel IsItemsHost="False" Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0">
-                                    <Rectangle Fill="Red" Width="10" Height="15"/>
-                                    <TextBlock Text="{Binding DestinationRouterName}" Foreground="White"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <ToggleButton x:Name="Btn" IsHitTestVisible="{Binding ElementName=Popup, Path=IsOpen, Mode=OneWay, Converter={local:BoolInverter}}" Background="Transparent" BorderThickness="0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="routerNameText" Text="{Binding Path=RouterName}" Foreground="White"/>
+
+                            <ListBox ItemsSource="{Binding ContainingPackages}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel IsItemsHost="False" Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0">
+                                            <Rectangle Fill="Red" Width="10" Height="15"/>
+                                            <TextBlock Text="{Binding DestinationRouterName}" Foreground="White"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <Popup IsOpen="{Binding IsChecked, ElementName=Btn}" x:Name="Popup" StaysOpen="False">
+                        <Border BorderBrush="Black" BorderThickness="1" Background="LightYellow">
+                            <Button Command="{Binding DeleteRouterCommand}">
+                                <TextBlock Text="Delete Router"/>
+                            </Button>
+                        </Border>
+                    </Popup>
                 </StackPanel>
             </DataTemplate>
 
