@@ -10,6 +10,8 @@ namespace NetworkRoutingSimulator
 {
     class RouterVertex
         {
+        public static int INFINITY = 16;
+
         public class RoutingInfo
             {
             public String DestinationName { get; set; }
@@ -18,7 +20,13 @@ namespace NetworkRoutingSimulator
             }
 
         public delegate void DeletedEventHandler(object sender, EventArgs e);
-        public event DeletedEventHandler Deleted = delegate { }; 
+        public event DeletedEventHandler Deleted = delegate { };
+
+        public delegate void SentRoutingTableEventHandler(RouterVertex sender, RouterVertex receiver, List<RoutingInfo> routingTable);
+        public event SentRoutingTableEventHandler RoutingTableSent = delegate { };
+
+        public delegate void SentPackageEventHandler(RouterVertex sender, RouterVertex receiver, NetworkPacket packet);
+        public event SentPackageEventHandler PackageSent = delegate { };
 
         private Dictionary<RouterVertex, List<RoutingInfo>> _neighborUpdates;
 
@@ -33,6 +41,8 @@ namespace NetworkRoutingSimulator
         private ObservableCollection<NetworkPacket> _containingPackages;
 
         private RelayCommand _deleteRouterCommand;
+
+        private List<NetworkPacket> _sentPackets = new List<NetworkPacket>();
 
         public RouterVertex(String routerName)
         {
@@ -72,16 +82,36 @@ namespace NetworkRoutingSimulator
             info.HopsNumber = 1;
             }
 
+        public void AddRoutingTableUpdate(RouterVertex sender, List<RoutingInfo> routingTable)
+        {
+            _neighborUpdates.Add(sender, routingTable);
+        }
+
         public void SendPackage(NetworkPacket packet)
             {
             _NewPackages.Add(packet);
             }
 
+        public void ReturnFailedToSendPacket(NetworkPacket packet)
+        {
+            _sentPackets.Remove(packet);
+        }
+
+        public void RemoveConnection(RouterVertex neighborToRemove)
+        {
+            Neighboars.Remove(neighborToRemove);
+            foreach(var info in RoutingTable)
+            {
+                if (info.NextRouter == neighborToRemove.RouterName)
+                    info.HopsNumber = INFINITY;
+            }
+        }
+
         public void SendRoutingTableUpdate()
             {
             foreach(var neighbor in Neighboars)
                 {
-                neighbor._neighborUpdates.Add(this, RoutingTable.ToList());
+                RoutingTableSent(this, neighbor, RoutingTable.ToList());
                 }
             }
 
@@ -106,10 +136,14 @@ namespace NetworkRoutingSimulator
                 foreach (var routerinfo in update)
                     {
                     var selectedInfo = RoutingTable.Where(x => x.DestinationName == routerinfo.DestinationName).SingleOrDefault();
-                    if (selectedInfo == null)
+                    if (selectedInfo == null && routerinfo.HopsNumber < INFINITY)
                         {
-                        RoutingTable.Add(new RoutingInfo() { DestinationName = routerinfo.DestinationName, NextRouter = neighbor.RouterName, HopsNumber = routerinfo.HopsNumber + 1 });
+                        RoutingTable.Add(new RoutingInfo() { DestinationName = routerinfo.DestinationName, NextRouter = neighbor.RouterName, HopsNumber = routerinfo.HopsNumber >= INFINITY? INFINITY : routerinfo.HopsNumber + 1 });
                         }
+                    else if(neighbor.RouterName == selectedInfo.NextRouter)
+                    {
+                        selectedInfo.HopsNumber = routerinfo.HopsNumber >= INFINITY ? INFINITY : routerinfo.HopsNumber +1;
+                    }
                     else if (routerinfo.HopsNumber + 1 < selectedInfo.HopsNumber)
                         {
                         selectedInfo.HopsNumber = routerinfo.HopsNumber + 1;
@@ -122,43 +156,51 @@ namespace NetworkRoutingSimulator
 
         public void SendPackets()
             {
-            var sentPackets = new List<NetworkPacket>();
             foreach (var packet in ContainingPackages)
                 {
                 if (packet.DestinationRouterName == this.RouterName)
-                    sentPackets.Add(packet);
+                {
+                    _sentPackets.Add(packet);
+                    continue;
+                }
 
-                String nextRouter = RoutingTable.Where(x => x.DestinationName == packet.DestinationRouterName).Select(x => x.NextRouter).SingleOrDefault();
-                if(nextRouter != null)
+                RoutingInfo sendingInfo = RoutingTable.Where(x => x.DestinationName == packet.DestinationRouterName).SingleOrDefault();
+                if(sendingInfo != null && sendingInfo.HopsNumber < INFINITY)
                     {
-                    var neighbor = Neighboars.Where(x => x.RouterName == nextRouter).SingleOrDefault();
-                    neighbor.SendPackage(packet);
-                    sentPackets.Add(packet);
+                    var neighbor = Neighboars.Where(x => x.RouterName == sendingInfo.NextRouter).SingleOrDefault();
+                    _sentPackets.Add(packet);
+                    PackageSent(this, neighbor, packet);
                     }
                 }
 
-            foreach (var packet in sentPackets)
+            foreach (var packet in _sentPackets)
                 this.ContainingPackages.Remove(packet);
             }
 
-        internal void CheckForDisconectedRouters()
-            {
+        public void CheckForDisconectedRouters()
+        {
+            List<RouterVertex> neighboarsToRemove = new List<RouterVertex>();
             foreach (var missingNeighbor in _disaperedNeighbors.Keys)
-                {
+            {
                 if (_disaperedNeighbors[missingNeighbor] == 6)
-                    {
-                    _neighboards.Remove(missingNeighbor);
-                    var nonValidEntries = _routingTable.Where(x => x.DestinationName == missingNeighbor.RouterName || x.NextRouter == missingNeighbor.RouterName);
-                    foreach(var entry in nonValidEntries)
-                        {
-                        _routingTable.Remove(entry);
-                        foreach (var neighbor in _neighboards)
-                            {
-                            }
-                        }
-                    }
+                {
+                    neighboarsToRemove.Add(missingNeighbor);
                 }
             }
+            foreach (var neighboar in neighboarsToRemove)
+            {
+                Neighboars.Remove(neighboar);
+                foreach(var info in RoutingTable.Where(x => x.NextRouter == neighboar.RouterName))
+                    info.HopsNumber = INFINITY;
+
+                foreach (var validNeighboar in Neighboars)
+                {
+                    RoutingTableSent(this, validNeighboar, RoutingTable.ToList());
+                    validNeighboar.UpdateRoutingTable();
+                }
+
+            }
+        }
 
         public void UpdatePackets()
             {

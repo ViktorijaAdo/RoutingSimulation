@@ -14,6 +14,7 @@ namespace NetworkRoutingSimulator
         {
             _createRouterCommand = new RelayCommand(OnCreateRouterCommand, CanCreateRouter);
             _createConnectionCommand = new RelayCommand(OnCreateConnection, CanCreateConnection);
+            _removeConnectionCommand = new RelayCommand(OnRemoveConnection, CanRemoveConnection);
             _createPacketCommand = new RelayCommand(OnCreatePacket, CanCreatePacket);
             _doRoutingStepCommand = new RelayCommand(OnRoutingStep);
             _vertices = null;
@@ -25,6 +26,7 @@ namespace NetworkRoutingSimulator
         private RouterVertex _newConnectionTarget;
         private RouterVertex _newConnextionSource;
         private RelayCommand _createConnectionCommand;
+        private RelayCommand _removeConnectionCommand;
         private RouterVertex _newPacketSource;
         private RouterVertex _newPacketDestination;
         private RelayCommand _createPacketCommand;
@@ -58,6 +60,7 @@ namespace NetworkRoutingSimulator
                 {
                 _newConnectionTarget = value;
                 CreateConnectionCommand.RaiseCanExecuteChanged();
+                RemoveConnectionCommand.RaiseCanExecuteChanged();
                 }
             }
 
@@ -71,10 +74,12 @@ namespace NetworkRoutingSimulator
                 {
                 _newConnextionSource = value;
                 CreateConnectionCommand.RaiseCanExecuteChanged();
+                RemoveConnectionCommand.RaiseCanExecuteChanged();
                 }
             }
 
         public RelayCommand CreateConnectionCommand { get { return _createConnectionCommand; } }
+        public RelayCommand RemoveConnectionCommand { get { return _removeConnectionCommand; } }
 
         public RelayCommand DoRoutingStepCommand { get { return _doRoutingStepCommand; } }
 
@@ -144,6 +149,30 @@ namespace NetworkRoutingSimulator
             }
 
 
+        private bool CanRemoveConnection()
+        {
+            if (NewConnectionSource == null || NewConnectionTarget == null)
+                return false;
+
+            return RoutingGraph.ContainsEdge(NewConnectionSource, NewConnectionTarget) || RoutingGraph.ContainsEdge(NewConnectionTarget, NewConnectionSource);
+        }
+
+        private void OnRemoveConnection()
+        {
+            ConnectionEdge edgeToRemove;
+            if (RoutingGraph.TryGetEdge(NewConnectionSource, NewConnectionTarget, out edgeToRemove))
+            {
+                RoutingGraph.RemoveEdge(edgeToRemove);
+                NewConnectionSource.RemoveConnection(NewConnectionTarget);
+            }
+            if (RoutingGraph.TryGetEdge(NewConnectionTarget, NewConnectionSource, out edgeToRemove))
+            {
+                RoutingGraph.RemoveEdge(edgeToRemove);
+                NewConnectionTarget.RemoveConnection(NewConnectionSource);
+            }
+        }
+
+
         private bool CanCreatePacket()
             {
             return NewPacketDestination != null && NewPacketSource != null;
@@ -156,9 +185,6 @@ namespace NetworkRoutingSimulator
 
         private void OnRoutingStep()
             {
-            foreach (var router in RoutingGraph.Vertices)
-                router.CheckForDisconectedRouters();
-
             foreach(var router in RoutingGraph.Vertices)
                 router.SendRoutingTableUpdate();
 
@@ -170,7 +196,10 @@ namespace NetworkRoutingSimulator
 
             foreach (var Router in RoutingGraph.Vertices)
                 Router.UpdatePackets();
-            }
+
+            foreach (var router in RoutingGraph.Vertices)
+                router.CheckForDisconectedRouters();
+        }
 
         private void CreateRoutingGraph()
         {
@@ -186,10 +215,15 @@ namespace NetworkRoutingSimulator
             vertexes[3].ContainingPackages.Add(new NetworkPacket("4"));
 
             g.AddEdge(new ConnectionEdge(vertexes[0], vertexes[1]));
+            g.AddEdge(new ConnectionEdge(vertexes[1], vertexes[0]));
             g.AddEdge(new ConnectionEdge(vertexes[1], vertexes[2]));
+            g.AddEdge(new ConnectionEdge(vertexes[2], vertexes[1]));
             g.AddEdge(new ConnectionEdge(vertexes[2], vertexes[3]));
+            g.AddEdge(new ConnectionEdge(vertexes[3], vertexes[2]));
             g.AddEdge(new ConnectionEdge(vertexes[3], vertexes[1]));
+            g.AddEdge(new ConnectionEdge(vertexes[1], vertexes[3]));
             g.AddEdge(new ConnectionEdge(vertexes[4], vertexes[0]));
+            g.AddEdge(new ConnectionEdge(vertexes[0], vertexes[4]));
 
             _routingGraph = g;
         }

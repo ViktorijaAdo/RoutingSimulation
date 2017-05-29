@@ -138,6 +138,9 @@
                     <Button Command="{Binding CreateConnectionCommand}" >
                         <TextBlock Text="Add Connection"/>
                     </Button>
+                <Button Command="{Binding RemoveConnectionCommand}" >
+                    <TextBlock Text="RemoveConnection"/>
+                </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="0">
                     <Label >
